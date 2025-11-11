@@ -1,5 +1,5 @@
 /*
- *    Copyright 2010-2022 the original author or authors.
+ *    Copyright 2010-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ import org.mybatis.jpetstore.service.CatalogService;
 public class CatalogActionBean extends AbstractActionBean {
 
   private static final long serialVersionUID = 5849523372175050635L;
+
+  private static final String VIEW_ALL_ITEMS = "/WEB-INF/jsp/catalog/AllItems.jsp";
 
   private static final String MAIN = "/WEB-INF/jsp/catalog/Main.jsp";
   private static final String VIEW_CATEGORY = "/WEB-INF/jsp/catalog/Category.jsp";
@@ -150,6 +152,12 @@ public class CatalogActionBean extends AbstractActionBean {
    *
    * @return the forward resolution
    */
+  public ForwardResolution viewAllItems() {
+    itemList = catalogService.getAllItemList();
+
+    return new ForwardResolution(VIEW_ALL_ITEMS);
+  }
+
   public ForwardResolution viewCategory() {
     if (categoryId != null) {
       productList = catalogService.getProductListByCategory(categoryId);
