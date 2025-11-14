@@ -25,6 +25,14 @@
 
 <h2>All Products</h2>
 
+<div style="position: relative; display: inline-block;">
+    <div style="position: absolute; right: 0; top: -35px;">
+            <form action="compareItems" method="post" style="margin: 0;">
+                <input type="submit" value="Compare" class="Button"
+                       style="padding: 8px 20px; font-size: 14px; height: 34px;">
+            </form>
+        </div>
+
 <table>
 	<tr>
 	    <th>Select</th>
@@ -67,4 +75,3 @@
 </div>
 
 <%@ include file="../common/IncludeBottom.jsp"%>
-1234
