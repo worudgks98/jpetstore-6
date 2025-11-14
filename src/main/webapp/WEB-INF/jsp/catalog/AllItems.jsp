@@ -26,13 +26,12 @@
 <h2>All Products</h2>
 
 <div style="position: relative; display: inline-block;">
-    <div style="position: absolute; right: 0; top: -40px;">
-            <form action="compareItems" method="post" style="margin: 0;">
-                <input type="submit" value="Compare" class="Button"
-                       style="padding: 8px 20px; font-size: 14px; height: 34px;">
-            </form>
+     <div style="position: absolute; right: 0; top: -40px;">
+            <button type="button" id="compareBtn" class="Button"
+                style="padding: 8px 20px; font-size: 14px; height: 34px;">
+                Compare
+            </button>
         </div>
-
 <table>
 	<tr>
 	    <th>Select</th>
@@ -74,5 +73,25 @@
 
 </div>
 
+<script>
+document.getElementById("compareBtn").addEventListener("click", function() {
+    const checked = document.querySelectorAll("input[name='selectedItems']:checked");
+
+    if (checked.length !== 2) {
+        alert("Please select exactly 2 items to compare!");
+        return;
+    }
+
+    const id1 = checked[0].value;
+    const id2 = checked[1].value;
+
+    // 프로젝트 contextPath 자동 인식
+    const base = "${pageContext.request.contextPath}";
+    const url = base + "/comparePopup.jsp?id1=" + id1 + "&id2=" + id2;
+
+    window.open(url, "compareWindow", "width=600,height=600");
+});
+</script>
+
+
 <%@ include file="../common/IncludeBottom.jsp"%>
-12345
