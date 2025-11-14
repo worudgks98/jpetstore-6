@@ -27,6 +27,7 @@
 
 <table>
 	<tr>
+	    <th>Select</th>
 		<th>Item ID</th>
 		<th>Product ID</th>
 		<th>Description</th>
@@ -35,6 +36,9 @@
 	</tr>
 	<c:forEach var="item" items="${actionBean.itemList}">
 		<tr>
+		    <td>
+		        <input type="checkbox" name="selectedItems" value="${item.itemId}">
+		    </td>
 			<td><stripes:link
 				beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
 				event="viewItem">
@@ -63,4 +67,3 @@
 </div>
 
 <%@ include file="../common/IncludeBottom.jsp"%>
-12345
