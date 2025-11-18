@@ -95,3 +95,4 @@ document.getElementById("compareBtn").addEventListener("click", function() {
 
 
 <%@ include file="../common/IncludeBottom.jsp"%>
+123

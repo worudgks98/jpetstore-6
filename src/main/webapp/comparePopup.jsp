@@ -19,14 +19,135 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Compare Result</title>
+    <title>Product Comparison</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid #888;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .label {
+            background: #fafafa;
+            font-weight: bold;
+        }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #777;
+            background: #f9f9f9;
+        }
+    </style>
+
 </head>
 <body>
 
-<h2>선택된 상품 비교</h2>
+<%
+    String id1 = request.getParameter("id1");
+    String id2 = request.getParameter("id2");
 
-<p>첫 번째 상품 ID: ${param.id1}</p>
-<p>두 번째 상품 ID: ${param.id2}</p>
+    // ⭐ JPetStore 더미 상품 데이터 (나중에 DB 값으로 교체 가능)
+    class ProductInfo {
+        String price, characteristics, suitability, pros, cons;
+
+        ProductInfo(String price, String characteristics, String suitability,
+                    String pros, String cons) {
+            this.price = price;
+            this.characteristics = characteristics;
+            this.suitability = suitability;
+            this.pros = pros;
+            this.cons = cons;
+        }
+    }
+
+    // 예시로 상품 1, 2 더미 데이터
+    ProductInfo p1 = new ProductInfo(
+        "$16.50",
+        "Small freshwater fish",
+        "Best for beginners",
+        "Low maintenance",
+        "Small tank needed"
+    );
+
+    ProductInfo p2 = new ProductInfo(
+        "$18.50",
+        "Medium reptile breed",
+        "Intermediate difficulty",
+        "Unique appearance",
+        "Requires heat lamp"
+    );
+%>
+
+<h2>Product Comparison</h2>
+
+<table>
+    <tr>
+        <th>Comparison Item</th>
+        <th>Product 1 ( <%= id1 %> )</th>
+        <th>Product 2 ( <%= id2 %> )</th>
+    </tr>
+
+    <tr>
+        <td class="label">Price</td>
+        <td><%= p1.price %></td>
+        <td><%= p2.price %></td>
+    </tr>
+
+    <tr>
+        <td class="label">Characteristics</td>
+        <td><%= p1.characteristics %></td>
+        <td><%= p2.characteristics %></td>
+    </tr>
+
+    <tr>
+        <td class="label">Suitability</td>
+        <td><%= p1.suitability %></td>
+        <td><%= p2.suitability %></td>
+    </tr>
+
+    <tr>
+        <td class="label">Pros</td>
+        <td><%= p1.pros %></td>
+        <td><%= p2.pros %></td>
+    </tr>
+
+    <tr>
+        <td class="label">Cons</td>
+        <td><%= p1.cons %></td>
+        <td><%= p2.cons %></td>
+    </tr>
+</table>
+
+<div class="feedback-box">
+    <h3>Final Feedback</h3>
+    <p>— 여기에 GPT 추천 결과 들어갈 자리 —</p>
+</div>
 
 </body>
 </html>
+
