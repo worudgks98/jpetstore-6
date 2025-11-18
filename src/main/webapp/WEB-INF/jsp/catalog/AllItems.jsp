@@ -86,35 +86,63 @@
      style="display:none;
             position:fixed; top:0; left:0;
             width:100%; height:100%;
-            background:rgba(0,0,0,0.5);
+            background:rgba(0,0,0,0.45);
+            backdrop-filter: blur(2px);
             z-index:9998;">
 </div>
 
-<!-- 중앙 모달 박스 -->
+<!-- JPetStore 스타일 모달 -->
 <div id="compareModal"
      style="display:none;
             position:fixed;
             top:50%; left:50%;
             transform:translate(-50%, -50%);
-            width:700px;
-            padding:20px;
+            width:720px;
             background:white;
             border-radius:12px;
-            box-shadow:0 0 20px rgba(0,0,0,0.4);
-            z-index:9999;">
+            border:2px solid #2f4f2f; /* JPetStore 테마색 */
+            box-shadow:0px 8px 25px rgba(0,0,0,0.35);
+            z-index:9999;
+            overflow:hidden;
+            animation: fadeIn 0.25s ease-out;">
 
-    <div style="text-align:right; margin-bottom:5px;">
+    <!-- 헤더(녹색바) -->
+    <div style="background:#3c6e47;
+                padding:12px 16px;
+                color:white;
+                font-size:18px;
+                font-weight:bold;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;">
+
+        <span>Product Comparison</span>
+
         <button id="closeModalBtn"
-                style="background:#333; color:white; padding:6px 14px;
-                       border:none; border-radius:4px; cursor:pointer;">
+                style="background:#244026;
+                       color:white;
+                       border:none;
+                       padding:5px 12px;
+                       border-radius:4px;
+                       cursor:pointer;
+                       font-weight:bold;">
             X
         </button>
     </div>
 
-    <!-- 비교 페이지를 로드할 iframe -->
+    <!-- iframe 박스 -->
     <iframe id="compareFrame" src=""
-            style="width:100%; height:500px; border:none;"></iframe>
+            style="width:100%; height:520px; border:none;"></iframe>
 </div>
+
+<!-- 모달 fade-in 애니메이션 -->
+<style>
+@keyframes fadeIn {
+  from { opacity: 0; transform:translate(-50%, -48%); }
+  to   { opacity: 1; transform:translate(-50%, -50%); }
+}
+</style>
+
 
 <!-- ============================= -->
 <!-- ⭐ Compare 버튼 자바스크립트 ⭐ -->
@@ -122,6 +150,17 @@
 
 <script>
 document.getElementById("compareBtn").addEventListener("click", function() {
+    const modal = document.getElementById("compareModal");
+    const overlay = document.getElementById("compareModalOverlay");
+    const iframe = document.getElementById("compareFrame");
+
+    // 이미 열려있으면 닫기
+    if (modal.style.display === "block") {
+        modal.style.display = "none";
+        overlay.style.display = "none";
+        return;
+    }
+
     const checked = document.querySelectorAll("input[name='selectedItems']:checked");
 
     if (checked.length !== 2) {
@@ -135,19 +174,27 @@ document.getElementById("compareBtn").addEventListener("click", function() {
     const base = "${pageContext.request.contextPath}";
     const url = base + "/comparePopup.jsp?id1=" + id1 + "&id2=" + id2;
 
-    // iframe에 URL 넣기
-    document.getElementById("compareFrame").src = url;
+    // 모달 숨긴 상태에서 iframe 로딩
+    iframe.style.opacity = "0";   // 로딩 전 숨김
+    iframe.src = url;
 
-    // 모달 열기
-    document.getElementById("compareModalOverlay").style.display = "block";
-    document.getElementById("compareModal").style.display = "block";
+    // iframe이 완전히 로드되면 모달을 표시
+    iframe.onload = function() {
+        overlay.style.display = "block";
+        modal.style.display = "block";
+
+        // 부드럽게 나타나는 효과
+        setTimeout(() => { iframe.style.opacity = "1"; }, 10);
+    };
 });
 
-// 모달 닫기
+// X 버튼으로 닫기
 document.getElementById("closeModalBtn").addEventListener("click", function() {
     document.getElementById("compareModalOverlay").style.display = "none";
     document.getElementById("compareModal").style.display = "none";
 });
 </script>
+
+
 
 <%@ include file="../common/IncludeBottom.jsp"%>
