@@ -30,9 +30,11 @@
 <div style="position: relative; display: inline-block;">
      <div style="position: absolute; right: 0; top: -40px;">
             <button type="button" id="compareBtn" class="Button"
-                style="padding: 8px 20px; font-size: 14px; height: 34px;">
+                style="padding: 8px 20px; font-size: 14px; height: 34px;
+                       background-color:#215E21; color:white; border: 1px solid #124812;">
                 Compare
             </button>
+
         </div>
 
 <table>
