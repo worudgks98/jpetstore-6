@@ -79,9 +79,6 @@
 
 </div>
 
-<!-- ============================= -->
-<!-- ⭐ 모달 팝업 overlay + box ⭐ -->
-<!-- ============================= -->
 
 <!-- 어두운 배경 -->
 <div id="compareModalOverlay"
@@ -145,10 +142,6 @@
 }
 </style>
 
-
-<!-- ============================= -->
-<!-- ⭐ Compare 버튼 자바스크립트 ⭐ -->
-<!-- ============================= -->
 
 <script>
 document.getElementById("compareBtn").addEventListener("click", function() {
