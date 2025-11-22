@@ -104,32 +104,56 @@
 </stripes:form></div>
 </div>
 
-<div id="QuickLinks"><stripes:link
+<div id="QuickLinks">
+    <stripes:link
+            beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
+            event="viewAllItems">All
+    </stripes:link>
+
+    <img src="../images/separator.gif" />
+
+    <stripes:link
 	beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
 	event="viewCategory">
 	<stripes:param name="categoryId" value="FISH" />
 	<img src="../images/sm_fish.gif" />
-</stripes:link> <img src="../images/separator.gif" /> <stripes:link
+    </stripes:link>
+
+    <img src="../images/separator.gif" />
+
+    <stripes:link
 	beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
 	event="viewCategory">
 	<stripes:param name="categoryId" value="DOGS" />
 	<img src="../images/sm_dogs.gif" />
-</stripes:link> <img src="../images/separator.gif" /> <stripes:link
+    </stripes:link>
+
+    <img src="../images/separator.gif" />
+
+    <stripes:link
 	beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
 	event="viewCategory">
 	<stripes:param name="categoryId" value="REPTILES" />
 	<img src="../images/sm_reptiles.gif" />
-</stripes:link> <img src="../images/separator.gif" /> <stripes:link
+    </stripes:link>
+
+    <img src="../images/separator.gif" />
+
+    <stripes:link
 	beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
 	event="viewCategory">
 	<stripes:param name="categoryId" value="CATS" />
 	<img src="../images/sm_cats.gif" />
-</stripes:link> <img src="../images/separator.gif" /> <stripes:link
+    </stripes:link>
+
+    <img src="../images/separator.gif" />
+
+    <stripes:link
 	beanclass="org.mybatis.jpetstore.web.actions.CatalogActionBean"
 	event="viewCategory">
 	<stripes:param name="categoryId" value="BIRDS" />
 	<img src="../images/sm_birds.gif" />
-</stripes:link></div>
+    </stripes:link></div>
 
 </div>
 
