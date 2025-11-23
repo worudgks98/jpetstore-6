@@ -167,18 +167,15 @@ document.getElementById("compareBtn").addEventListener("click", function() {
     const id2 = checked[1].value;
 
     const base = "${pageContext.request.contextPath}";
-    const url = base + "/comparePopup.jsp?id1=" + id1 + "&id2=" + id2;
+    const url = base + "/comparePopup.action?id1=" + encodeURIComponent(id1)
+                                       + "&id2=" + encodeURIComponent(id2);
 
-    // 모달 숨긴 상태에서 iframe 로딩
-    iframe.style.opacity = "0";   // 로딩 전 숨김
+    iframe.style.opacity = "0";
     iframe.src = url;
 
-    // iframe이 완전히 로드되면 모달을 표시
     iframe.onload = function() {
         overlay.style.display = "block";
         modal.style.display = "block";
-
-        // 부드럽게 나타나는 효과
         setTimeout(() => { iframe.style.opacity = "1"; }, 10);
     };
 });
@@ -193,4 +190,3 @@ document.getElementById("closeModalBtn").addEventListener("click", function() {
 
 
 <%@ include file="../common/IncludeBottom.jsp"%>
-123
