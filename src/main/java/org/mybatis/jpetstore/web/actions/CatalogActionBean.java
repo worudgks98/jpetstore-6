@@ -1,5 +1,5 @@
 /*
- *    Copyright 2010-2022 the original author or authors.
+ *    Copyright 2010-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,13 +15,18 @@
  */
 package org.mybatis.jpetstore.web.actions;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
 
 import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.SessionScope;
 import net.sourceforge.stripes.integration.spring.SpringBean;
 
+import org.mybatis.jpetstore.domain.Account;
 import org.mybatis.jpetstore.domain.Category;
 import org.mybatis.jpetstore.domain.Item;
 import org.mybatis.jpetstore.domain.Product;
@@ -59,6 +64,9 @@ public class CatalogActionBean extends AbstractActionBean {
   private String itemId;
   private Item item;
   private List<Item> itemList;
+
+  private Map<String, Boolean> productRecommendationMap;
+  private Map<String, String> productRecommendationMessageMap;
 
   public String getKeyword() {
     return keyword;
@@ -140,6 +148,22 @@ public class CatalogActionBean extends AbstractActionBean {
     this.itemList = itemList;
   }
 
+  public Map<String, Boolean> getProductRecommendationMap() {
+    return productRecommendationMap;
+  }
+
+  public void setProductRecommendationMap(Map<String, Boolean> productRecommendationMap) {
+    this.productRecommendationMap = productRecommendationMap;
+  }
+
+  public Map<String, String> getProductRecommendationMessageMap() {
+    return productRecommendationMessageMap;
+  }
+
+  public void setProductRecommendationMessageMap(Map<String, String> productRecommendationMessageMap) {
+    this.productRecommendationMessageMap = productRecommendationMessageMap;
+  }
+
   @DefaultHandler
   public ForwardResolution viewMain() {
     return new ForwardResolution(MAIN);
@@ -154,6 +178,32 @@ public class CatalogActionBean extends AbstractActionBean {
     if (categoryId != null) {
       productList = catalogService.getProductListByCategory(categoryId);
       category = catalogService.getCategory(categoryId);
+
+      // Check recommendations ONLY for logged-in users who have completed the survey
+      productRecommendationMap = new HashMap<>();
+      productRecommendationMessageMap = new HashMap<>();
+      HttpSession session = context.getRequest().getSession();
+      AccountActionBean accountBean = (AccountActionBean) session.getAttribute("accountBean");
+
+      // Only create recommendation map if user is logged in AND has completed survey
+      if (accountBean != null && accountBean.isAuthenticated() && accountBean.getAccount() != null) {
+        Account account = accountBean.getAccount();
+        // Check if user has completed the survey (all 6 preferences filled)
+        if (catalogService.hasCompletedSurvey(account)) {
+          // User has completed survey, check recommendations for each product
+          for (Product product : productList) {
+            boolean isRecommended = catalogService.isProductRecommended(account, product.getProductId());
+            productRecommendationMap.put(product.getProductId(), isRecommended);
+
+            // Generate recommendation message using LLM
+            String recommendationMessage = catalogService.getRecommendationMessage(account, product.getProductId(),
+                isRecommended);
+            productRecommendationMessageMap.put(product.getProductId(), recommendationMessage);
+          }
+        }
+        // If survey not completed, productRecommendationMap remains empty (no recommendations shown)
+      }
+      // If not logged in, productRecommendationMap remains empty (no recommendations shown)
     }
     return new ForwardResolution(VIEW_CATEGORY);
   }
