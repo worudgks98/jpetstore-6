@@ -81,11 +81,9 @@ public class ComparisonActionBean implements ActionBean {
         account = accountBean.getAccount();
       }
 
-
       String gptAnalysisStr = gptComparisonService.compareItems(item1, item2, account);
 
       logger.info("GPT Analysis String: {}", gptAnalysisStr);
-
 
       Map<String, Object> response = new HashMap<>();
       response.put("item1_id", item1.getItemId());
@@ -100,7 +98,6 @@ public class ComparisonActionBean implements ActionBean {
       response.put("user_activity_time",
           account.getActivityTime() != null ? account.getActivityTime() : "Not specified");
 
-
       try {
         Object gptAnalysisObj = objectMapper.readValue(gptAnalysisStr, Object.class);
         response.put("gpt_analysis", gptAnalysisObj);
@@ -109,7 +106,6 @@ public class ComparisonActionBean implements ActionBean {
         logger.error("Failed to parse GPT analysis JSON: {}", e.getMessage(), e);
         response.put("gpt_analysis", new HashMap<>()); // 빈 객체
       }
-
 
       String fullResponse = objectMapper.writeValueAsString(response);
 
