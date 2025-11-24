@@ -300,6 +300,26 @@
           <configuration>
             <overwrite>true</overwrite>
           </configuration>
+          <executions>
+            <execution>
+              <id>copy-license</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+                <resources>
+                  <resource>
+                    <directory>${project.basedir}</directory>
+                    <includes>
+                      <include>LICENSE</include>
+                    </includes>
+                  </resource>
+                </resources>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.codehaus.cargo</groupId>
@@ -323,6 +343,31 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.2</version>
+        <executions>
+          <execution>
+            <id>enforce-java</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[17,19),[21,23),[24,27)</version>
+                  <message>Java version must be 17-18, 21-22, or 24-26</message>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>[3.9.0,)</version>
+                  <message>Maven version must be 3.9.0 or higher</message>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.cargo</groupId>
         <artifactId>cargo-maven3-plugin</artifactId>
@@ -354,6 +399,22 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+        <version>7.1.0</version>
+        <configuration>
+          <bnd><![CDATA[
+            -noclassforname: true
+            -noextraheaders: true
+            -exportcontents: *
+            -removeheaders: Bnd-LastModified,Bundle-Name,Created-By,Tool,Private-Package
+            -import-package: !*;resolution:=optional,*;resolution:=optional
+            -fixupmessages: "The default package '.' is not permitted";is:=ignore
+            -failok: true
+          ]]></bnd>
+        </configuration>
       </plugin>
     </plugins>
   </build>
