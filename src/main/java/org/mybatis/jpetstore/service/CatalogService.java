@@ -87,6 +87,16 @@ public class CatalogService {
   public boolean isItemInStock(String itemId) {
     return itemMapper.getInventoryQuantity(itemId) > 0;
   }
+
+  // 새로 추가한 모든 동물 가져오는 메소드
+  public List<Item> getAllItemList() {
+    return itemMapper.getAllItemList();
+  }
+
+  // 이것도 product 기준이 아니라 item 기준으로 수정!
+  // public List<Product> getAllProductList() {
+  // return productMapper.getAllProductList(); // ProductMapper에게 모든 상품을 달라고 요청
+  // }
 }
 
 // test11

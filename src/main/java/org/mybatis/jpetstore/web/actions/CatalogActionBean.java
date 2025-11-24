@@ -1,5 +1,5 @@
 /*
- *    Copyright 2010-2022 the original author or authors.
+ *    Copyright 2010-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -151,7 +151,20 @@ public class CatalogActionBean extends AbstractActionBean {
    * @return the forward resolution
    */
   public ForwardResolution viewCategory() {
-    if (categoryId != null) {
+    // "ALL" 이라는 카테고리 아이디가 들어오면 새로운 메소드를 호출함
+    if ("ALL".equals(categoryId)) {
+      itemList = catalogService.getAllItemList();
+      product = new Product();
+      product.setName("ALL Products");
+      product.setCategoryId("ALL");
+      return new ForwardResolution(VIEW_PRODUCT);
+      // 이건 세부 품목이 아니라 상품 분류를 전부 가져오는 기능이었음;; ex) 작은물고기, 중간물고기, 큰물고기(X), 물고기 (O)
+      // productList = catalogService.getAllProductList();
+      // category = new Category();
+      // category.setName("ALL Products");
+    }
+    // 아니라면 평소 하던대로 진행
+    else if (categoryId != null) {
       productList = catalogService.getProductListByCategory(categoryId);
       category = catalogService.getCategory(categoryId);
     }
