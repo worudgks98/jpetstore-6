@@ -21,6 +21,8 @@ import org.mybatis.jpetstore.domain.Account;
 import org.mybatis.jpetstore.mapper.AccountMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * The Class AccountService.
@@ -31,9 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountService {
 
   private final AccountMapper accountMapper;
+  private final RecommendationMessageService recommendationMessageService;
 
-  public AccountService(AccountMapper accountMapper) {
+  public AccountService(AccountMapper accountMapper, RecommendationMessageService recommendationMessageService) {
     this.accountMapper = accountMapper;
+    this.recommendationMessageService = recommendationMessageService;
   }
 
   public Account getAccount(String username) {
@@ -55,6 +59,7 @@ public class AccountService {
     accountMapper.insertAccount(account);
     accountMapper.insertProfile(account);
     accountMapper.insertSignon(account);
+    triggerRecommendationRefresh(account.getUsername());
   }
 
   /**
@@ -70,6 +75,27 @@ public class AccountService {
 
     Optional.ofNullable(account.getPassword()).filter(password -> password.length() > 0)
         .ifPresent(password -> accountMapper.updateSignon(account));
+    triggerRecommendationRefresh(account.getUsername());
+  }
+
+  private void triggerRecommendationRefresh(String username) {
+    Optional<Account> latestAccount = Optional.ofNullable(username).map(accountMapper::getAccountByUsername);
+    if (!latestAccount.isPresent()) {
+      return;
+    }
+
+    Account accountSnapshot = latestAccount.get();
+
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
+          recommendationMessageService.refreshRecommendationsAsync(accountSnapshot);
+        }
+      });
+    } else {
+      recommendationMessageService.refreshRecommendationsAsync(accountSnapshot);
+    }
   }
 
 }

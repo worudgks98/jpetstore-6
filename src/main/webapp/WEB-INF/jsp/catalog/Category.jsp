@@ -28,7 +28,7 @@
 
 <%-- Check if user is logged in and has completed survey --%>
 <c:set var="hasCompletedSurvey" value="false" />
-<c:if test="${not empty sessionScope.accountBean and sessionScope.accountBean.authenticated and not empty actionBean.productRecommendationMap}">
+<c:if test="${not empty sessionScope.accountBean and sessionScope.accountBean.authenticated and actionBean.userCompletedSurvey}">
 	<c:set var="hasCompletedSurvey" value="true" />
 </c:if>
 

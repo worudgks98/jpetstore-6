@@ -30,7 +30,9 @@ import org.mybatis.jpetstore.domain.Account;
 import org.mybatis.jpetstore.domain.Category;
 import org.mybatis.jpetstore.domain.Item;
 import org.mybatis.jpetstore.domain.Product;
+import org.mybatis.jpetstore.domain.RecommendationMessage;
 import org.mybatis.jpetstore.service.CatalogService;
+import org.mybatis.jpetstore.service.RecommendationMessageService;
 
 /**
  * The Class CatalogActionBean.
@@ -50,6 +52,8 @@ public class CatalogActionBean extends AbstractActionBean {
 
   @SpringBean
   private transient CatalogService catalogService;
+  @SpringBean
+  private transient RecommendationMessageService recommendationMessageService;
 
   private String keyword;
 
@@ -67,6 +71,7 @@ public class CatalogActionBean extends AbstractActionBean {
 
   private Map<String, Boolean> productRecommendationMap;
   private Map<String, String> productRecommendationMessageMap;
+  private boolean userCompletedSurvey;
 
   public String getKeyword() {
     return keyword;
@@ -164,6 +169,10 @@ public class CatalogActionBean extends AbstractActionBean {
     this.productRecommendationMessageMap = productRecommendationMessageMap;
   }
 
+  public boolean isUserCompletedSurvey() {
+    return userCompletedSurvey;
+  }
+
   @DefaultHandler
   public ForwardResolution viewMain() {
     return new ForwardResolution(MAIN);
@@ -175,6 +184,7 @@ public class CatalogActionBean extends AbstractActionBean {
    * @return the forward resolution
    */
   public ForwardResolution viewCategory() {
+    userCompletedSurvey = false;
     // "ALL" 이라는 카테고리 아이디가 들어오면 새로운 메소드를 호출함
     if ("ALL".equals(categoryId)) {
       itemList = catalogService.getAllItemList();
@@ -195,28 +205,35 @@ public class CatalogActionBean extends AbstractActionBean {
       // Check recommendations ONLY for logged-in users who have completed the survey
       productRecommendationMap = new HashMap<>();
       productRecommendationMessageMap = new HashMap<>();
+      userCompletedSurvey = false;
       HttpSession session = context.getRequest().getSession();
       AccountActionBean accountBean = (AccountActionBean) session.getAttribute("accountBean");
 
-      // Only create recommendation map if user is logged in AND has completed survey
+      // Only create recommendation map if user is logged in
       if (accountBean != null && accountBean.isAuthenticated() && accountBean.getAccount() != null) {
         Account account = accountBean.getAccount();
-        // Check if user has completed the survey (all 6 preferences filled)
-        if (catalogService.hasCompletedSurvey(account)) {
-          // User has completed survey, check recommendations for each product
-          for (Product product : productList) {
+        userCompletedSurvey = catalogService.hasCompletedSurvey(account);
+        Map<String, RecommendationMessage> cachedMessages = recommendationMessageService
+            .getRecommendationMessageMap(account.getUsername());
+
+        for (Product product : productList) {
+          RecommendationMessage cachedMessage = cachedMessages.get(product.getProductId());
+          if (cachedMessage != null) {
+            productRecommendationMap.put(product.getProductId(), cachedMessage.isRecommended());
+            productRecommendationMessageMap.put(product.getProductId(), cachedMessage.getMessage());
+            continue;
+          }
+
+          if (userCompletedSurvey) {
             boolean isRecommended = catalogService.isProductRecommended(account, product.getProductId());
             productRecommendationMap.put(product.getProductId(), isRecommended);
 
-            // Generate recommendation message using LLM
             String recommendationMessage = catalogService.getRecommendationMessage(account, product.getProductId(),
                 isRecommended);
             productRecommendationMessageMap.put(product.getProductId(), recommendationMessage);
           }
         }
-        // If survey not completed, productRecommendationMap remains empty (no recommendations shown)
       }
-      // If not logged in, productRecommendationMap remains empty (no recommendations shown)
     }
     return new ForwardResolution(VIEW_CATEGORY);
   }

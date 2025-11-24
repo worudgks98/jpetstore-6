@@ -75,6 +75,17 @@ create table survey_recommendations (
     recommended_json_data varchar(1024) not null
 );
 
+create table recommendation_messages (
+    username varchar(80) not null,
+    productid varchar(10) not null,
+    is_recommended boolean not null,
+    message varchar(1024) not null,
+    last_updated timestamp default current_timestamp,
+    constraint pk_recommendation_messages primary key (username, productid),
+    constraint fk_recommendation_messages_account foreign key (username) references account (userid),
+    constraint fk_recommendation_messages_product foreign key (productid) references product (productid)
+);
+
 create table bannerdata (
     favcategory varchar(80) not null,
     bannername varchar(255)  null,

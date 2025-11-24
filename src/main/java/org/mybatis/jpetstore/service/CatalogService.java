@@ -79,6 +79,10 @@ public class CatalogService {
     return productMapper.getProductListByCategory(categoryId);
   }
 
+  public List<Product> getAllProducts() {
+    return productMapper.getAllProducts();
+  }
+
   /**
    * Search product list.
    *
