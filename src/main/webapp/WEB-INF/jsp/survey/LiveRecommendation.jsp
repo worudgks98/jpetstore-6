@@ -35,13 +35,14 @@
             <div class="Message">No recommendations available.</div>
         </c:if>
         <c:if test="${not empty actionBean.recommendedItems}">
-            <table class="itemList"> <tr>
-                <th>Item ID</th>
-                <th>Product ID</th>
-                <th>Description</th>
-                <th>List Price</th>
-                <th>&nbsp;</th>
-            </tr>
+            <table class="itemList">
+                <tr>
+                    <th>Item ID</th>
+                    <th>Product ID</th>
+                    <th>Description</th>
+                    <th>List Price</th>
+                    <th>&nbsp;</th>
+                </tr>
                 <c:forEach var="item" items="${actionBean.recommendedItems}">
                     <tr>
                         <td>
@@ -54,6 +55,25 @@
 
                                 <div class="image-popup">
                                     <img src="/jpetstore/images/placeholder.gif" alt="Item Image" />
+                                    <div class="recommend-text">
+                                        <c:set var="recommendation" value="${actionBean.recommendationMessageMap[item.product.productId]}" />
+                                        <c:choose>
+                                            <c:when test="${not empty recommendation}">
+                                                <div class="ai-copy ${recommendation.recommended ? 'RECOMMEND' : 'NOT_RECOMMEND'}">
+                                                    <div class="ai-copy-body">
+                                                        <c:out value="${recommendation.message}" escapeXml="false" />
+                                                    </div>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:if test="${sessionScope.accountBean.authenticated}">
+                                                    <div class="ai-copy neutral">
+                                                        설문 답변을 반영한 추천 문구를 불러오는 중입니다.
+                                                    </div>
+                                                </c:if>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
                                 </div>
 
                                 <span class="popup-data" style="display: none;">
@@ -84,18 +104,77 @@
 
 <%-- ★★★ [수정 2] 이미지 팝업 처리 스크립트 추가 ★★★ --%>
 <script>
-    // 이미지 경로 추출 함수 (Product.jsp와 동일)
     function extractImagePath(desc) {
         if (!desc) return '/jpetstore/images/placeholder.gif';
-        const match = desc.match(/<img src="([^"]+)">/);
+        let match = desc.match(/<(?:image|img)[^>]+src\s*=\s*["']([^"']+)["']/i);
         if (match && match[1]) {
-            return match[1].replace('../', '/jpetstore/');
+            let imgPath = match[1];
+            if (imgPath.startsWith('../')) {
+                return imgPath.replace('../', '/jpetstore/');
+            }
+            if (!imgPath.startsWith('/')) {
+                return '/jpetstore/' + imgPath;
+            }
+            return imgPath;
         }
         return '/jpetstore/images/placeholder.gif';
     }
 
+    function adjustPopupPosition(link, popup) {
+        const linkRect = link.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const popupRect = popup.getBoundingClientRect();
+        const popupWidth = popupRect.width || 250;
+        const popupHeight = popupRect.height || 300;
+        const spaceOnLeft = linkRect.left;
+        const spaceOnRight = viewportWidth - linkRect.right;
+        const spaceOnTop = linkRect.top;
+        const spaceOnBottom = viewportHeight - linkRect.bottom;
+        let popupLeft = linkRect.left - popupWidth - 10;
+        let popupTop = linkRect.top;
+
+        if (spaceOnLeft >= popupWidth + 10) {
+            popupLeft = linkRect.left - popupWidth - 10;
+        } else if (spaceOnRight >= popupWidth + 10) {
+            popupLeft = linkRect.right + 10;
+        } else {
+            popupLeft = linkRect.right + 10;
+            if (popupLeft + popupWidth > viewportWidth) {
+                popupLeft = viewportWidth - popupWidth - 10;
+            }
+            if (popupLeft < 10) {
+                popupLeft = 10;
+            }
+        }
+
+        if (spaceOnBottom >= popupHeight) {
+            popupTop = linkRect.top;
+        } else if (spaceOnTop >= popupHeight) {
+            popupTop = linkRect.bottom - popupHeight;
+        } else {
+            if (spaceOnBottom < spaceOnTop) {
+                popupTop = linkRect.bottom - popupHeight;
+                if (popupTop < 10) {
+                    popupTop = 10;
+                }
+            } else {
+                popupTop = linkRect.top;
+                if (popupTop + popupHeight > viewportHeight - 10) {
+                    popupTop = viewportHeight - popupHeight - 10;
+                }
+            }
+        }
+
+        popup.style.left = popupLeft + 'px';
+        popup.style.top = popupTop + 'px';
+        popup.style.right = 'auto';
+        popup.style.bottom = 'auto';
+        popup.style.transform = '';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        const links = document.querySelectorAll('.item-link');
+        const links = document.querySelectorAll('#Catalog .item-link');
 
         links.forEach(link => {
             const popup = link.querySelector('.image-popup');
@@ -103,11 +182,81 @@
             const imgTag = popup ? popup.querySelector('img') : null;
 
             if (popup && dataSpan && imgTag) {
-                // 이미지 경로 설정
-                const description = dataSpan.innerHTML;
-                imgTag.src = extractImagePath(description);
+                function setImage() {
+                    const description = dataSpan.innerHTML || '';
+                    if (description && description.trim() !== '') {
+                        imgTag.src = extractImagePath(description);
+                    } else {
+                        setTimeout(setImage, 100);
+                    }
+                }
+                setImage();
+            }
+
+            if (link && popup) {
+                link.addEventListener('mouseenter', function() {
+                    if (dataSpan && imgTag) {
+                        const description = dataSpan.innerHTML || '';
+                        if (description) {
+                            imgTag.src = extractImagePath(description);
+                        }
+                    }
+                    popup.style.display = 'block';
+                    requestAnimationFrame(function() {
+                        adjustPopupPosition(link, popup);
+                        const img = popup.querySelector('img');
+                        if (img && !img.complete) {
+                            img.addEventListener('load', function() {
+                                adjustPopupPosition(link, popup);
+                            }, { once: true });
+                        }
+                    });
+                });
+
+                link.addEventListener('mouseleave', function() {
+                    popup.style.display = 'none';
+                });
             }
         });
+
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                links.forEach(link => {
+                    const popup = link.querySelector('.image-popup');
+                    if (popup && popup.style.display === 'block') {
+                        adjustPopupPosition(link, popup);
+                    }
+                });
+            }, 100);
+        });
+
+        window.addEventListener('scroll', function() {
+            links.forEach(link => {
+                const popup = link.querySelector('.image-popup');
+                if (popup && popup.style.display === 'block') {
+                    adjustPopupPosition(link, popup);
+                }
+            });
+        }, true);
+    });
+
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            const links = document.querySelectorAll('#Catalog .item-link');
+            links.forEach(link => {
+                const popup = link.querySelector('.image-popup');
+                const dataSpan = link.querySelector('.popup-data');
+                const imgTag = popup ? popup.querySelector('img') : null;
+                if (popup && dataSpan && imgTag) {
+                    const description = dataSpan.innerHTML || '';
+                    if (description && description.trim() !== '') {
+                        imgTag.src = extractImagePath(description);
+                    }
+                }
+            });
+        }, 100);
     });
 </script>
 
