@@ -341,20 +341,30 @@ body>#Banner {
 /* 2. '팝업'의 기본 스타일 */
 .item-link .image-popup {
     display: none; /* ★★★ 평소에는 숨김 ★★★ */
-    position: absolute; /* 부모(item-link) 위에 겹쳐서 뜸 */
-    right: 100%;    /* 링크 바로 왼쪽에 */
-    top: 0;         /* 링크 상단에 맞춰서 */
+    position: fixed; /* 화면 기준으로 위치 조정 (JavaScript로 동적 위치 설정) */
     padding: 10px;
     background-color: white;
     border: 1px solid #ccc;
     box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
-    z-index: 10; /* 다른 요소들보다 위에 보이도록 */
+    z-index: 1000; /* 다른 요소들보다 위에 보이도록 */
+    width: 250px; /* 고정 너비 */
+    max-width: 90vw; /* 화면 너비의 90%를 넘지 않도록 */
+    max-height: 80vh; /* 화면 높이의 80%를 넘지 않도록 */
+    overflow-y: auto; /* 내용이 많으면 스크롤 가능 */
+    overflow-x: hidden; /* 가로 스크롤 방지 */
+    word-wrap: break-word; /* 긴 단어 줄바꿈 */
+    overflow-wrap: break-word; /* 긴 단어 줄바꿈 */
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
 }
 
 /* 3. 팝업 안의 이미지 크기 */
 .item-link .image-popup img {
-    width: 200px; /* 팝업 이미지 크기를 적절히 조절 */
+    width: 100%; /* 팝업 너비에 맞춤 */
+    max-width: 100%; /* 최대 너비 제한 (패딩 고려) */
     height: auto;
+    display: block; /* 이미지 아래 공백 제거 */
+    margin: 0 auto; /* 중앙 정렬 */
+    object-fit: contain; /* 이미지 비율 유지하며 크기 조정 */
 }
 
 /* 4. ★★★ 마우스를 올렸을 때 팝업을 보여줌 ★★★ */
@@ -423,6 +433,11 @@ body>#Banner {
     font-size: 12px;
     line-height: 1.4;
     box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .ai-copy.RECOMMEND {
@@ -450,6 +465,9 @@ body>#Banner {
 
 .ai-copy-body {
     margin-top: 4px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .ai-copy-cta {

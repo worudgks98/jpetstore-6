@@ -73,6 +73,7 @@ public class CatalogActionBean extends AbstractActionBean {
   private Map<String, String> productRecommendationMessageMap;
   private boolean userCompletedSurvey;
   private RecommendationMessage productRecommendationMessage;
+  private Map<String, RecommendationMessage> itemRecommendationMessageMap;
 
   public String getKeyword() {
     return keyword;
@@ -196,6 +197,36 @@ public class CatalogActionBean extends AbstractActionBean {
       product = new Product();
       product.setName("ALL Products");
       product.setCategoryId("ALL");
+
+      // ALL 카테고리: 각 아이템의 productId별 추천 메시지 미리 로드
+      itemRecommendationMessageMap = new HashMap<>();
+      HttpSession session = context.getRequest().getSession(false);
+      if (session != null) {
+        AccountActionBean accountBean = (AccountActionBean) session.getAttribute("accountBean");
+        if (accountBean != null && accountBean.isAuthenticated() && accountBean.getAccount() != null) {
+          Account account = accountBean.getAccount();
+          if (catalogService.hasCompletedSurvey(account)) {
+            Map<String, RecommendationMessage> cachedMessages = recommendationMessageService
+                .getRecommendationMessageMap(account.getUsername());
+
+            // 각 아이템의 productId별로 추천 메시지 가져오기
+            for (Item item : itemList) {
+              String prodId = item.getProduct().getProductId();
+              if (prodId != null && !itemRecommendationMessageMap.containsKey(prodId)) {
+                RecommendationMessage message = cachedMessages.get(prodId);
+                if (message == null) {
+                  // 캐시에 없으면 새로 가져오기
+                  message = recommendationMessageService.getRecommendationMessage(account.getUsername(), prodId);
+                }
+                if (message != null) {
+                  itemRecommendationMessageMap.put(prodId, message);
+                }
+              }
+            }
+          }
+        }
+      }
+
       return new ForwardResolution(VIEW_PRODUCT);
       // 이건 세부 품목이 아니라 상품 분류를 전부 가져오는 기능이었음;; ex) 작은물고기, 중간물고기, 큰물고기(X), 물고기 (O)
       // productList = catalogService.getAllProductList();
@@ -301,6 +332,11 @@ public class CatalogActionBean extends AbstractActionBean {
     item = null;
     itemList = null;
     productRecommendationMessage = null;
+    itemRecommendationMessageMap = null;
+  }
+
+  public Map<String, RecommendationMessage> getItemRecommendationMessageMap() {
+    return itemRecommendationMessageMap;
   }
 
   private RecommendationMessage resolveRecommendationMessage(String currentProductId) {
