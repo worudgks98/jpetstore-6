@@ -344,31 +344,6 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.2</version>
-        <executions>
-          <execution>
-            <id>enforce-java</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireJavaVersion>
-                  <version>[17,19),[21,23),[24,27)</version>
-                  <message>Java version must be 17-18, 21-22, or 24-26</message>
-                </requireJavaVersion>
-                <requireMavenVersion>
-                  <version>[3.9.0,)</version>
-                  <message>Maven version must be 3.9.0 or higher</message>
-                </requireMavenVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.cargo</groupId>
         <artifactId>cargo-maven3-plugin</artifactId>
         <executions>
