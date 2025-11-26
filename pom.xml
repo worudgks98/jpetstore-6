@@ -300,6 +300,26 @@
           <configuration>
             <overwrite>true</overwrite>
           </configuration>
+          <executions>
+            <execution>
+              <id>copy-license</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy-resources</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+                <resources>
+                  <resource>
+                    <directory>${project.basedir}</directory>
+                    <includes>
+                      <include>LICENSE</include>
+                    </includes>
+                  </resource>
+                </resources>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.codehaus.cargo</groupId>
@@ -354,6 +374,22 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+        <version>7.1.0</version>
+        <configuration>
+          <bnd><![CDATA[
+            -noclassforname: true
+            -noextraheaders: true
+            -exportcontents: *
+            -removeheaders: Bnd-LastModified,Bundle-Name,Created-By,Tool,Private-Package
+            -import-package: !*;resolution:=optional,*;resolution:=optional
+            -fixupmessages: "The default package '.' is not permitted";is:=ignore
+            -failok: true
+          ]]></bnd>
+        </configuration>
       </plugin>
     </plugins>
   </build>

@@ -34,4 +34,7 @@ public interface SurveyRecommendationMapper {
 
   void deleteSurveyRecommendation(int surveyRecommendationId);
 
+  SurveyRecommendation getSurveyRecommendationByPreferences(String residenceEnv, String carePeriod, String petColorPref,
+      String petSizePref, String activityTime, String dietManagement);
+
 }

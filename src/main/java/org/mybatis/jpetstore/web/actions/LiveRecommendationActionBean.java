@@ -19,8 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpSession;
@@ -33,9 +35,11 @@ import net.sourceforge.stripes.integration.spring.SpringBean;
 
 import org.mybatis.jpetstore.domain.Account;
 import org.mybatis.jpetstore.domain.Item;
+import org.mybatis.jpetstore.domain.RecommendationMessage;
 import org.mybatis.jpetstore.domain.SurveyRecommendation;
 import org.mybatis.jpetstore.mapper.SurveyRecommendationMapper;
 import org.mybatis.jpetstore.service.CatalogService;
+import org.mybatis.jpetstore.service.RecommendationMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +60,13 @@ public class LiveRecommendationActionBean extends AbstractActionBean {
   @SpringBean
   private transient SurveyRecommendationMapper surveyRecommendationMapper;
 
+  @SpringBean
+  private transient RecommendationMessageService recommendationMessageService;
+
   private Account account;
   private String recommendationJson;
   private List<Item> recommendedItems = new ArrayList<>();
+  private Map<String, RecommendationMessage> recommendationMessageMap = new HashMap<>();
 
   public Account getAccount() {
     return account;
@@ -70,6 +78,10 @@ public class LiveRecommendationActionBean extends AbstractActionBean {
 
   public List<Item> getRecommendedItems() {
     return recommendedItems;
+  }
+
+  public Map<String, RecommendationMessage> getRecommendationMessageMap() {
+    return recommendationMessageMap;
   }
 
   @DefaultHandler
@@ -85,6 +97,8 @@ public class LiveRecommendationActionBean extends AbstractActionBean {
     account = accountBean.getAccount();
 
     // Look up precomputed recommendations from SURVEY_RECOMMENDATIONS
+    // This uses exact match (all 6 conditions must match exactly)
+    // This is separate from the weighted scoring used in Category.jsp popup
     logger.info(
         "Requesting recommendation for account survey: residenceEnv='{}', carePeriod='{}', petColorPref='{}', petSizePref='{}', activityTime='{}', dietManagement='{}'",
         account.getResidenceEnv(), account.getCarePeriod(), account.getPetColorPref(), account.getPetSizePref(),
@@ -98,6 +112,7 @@ public class LiveRecommendationActionBean extends AbstractActionBean {
       logger.warn("No SURVEY_RECOMMENDATIONS match found for the given survey answers.");
     }
     recommendedItems = buildRecommendedItems(recommendationJson);
+    recommendationMessageMap = buildRecommendationMessageMap();
     return new ForwardResolution(VIEW);
   }
 
@@ -126,5 +141,36 @@ public class LiveRecommendationActionBean extends AbstractActionBean {
       logger.warn("Failed to parse recommendation JSON: {}", e.getMessage());
     }
     return items;
+  }
+
+  private Map<String, RecommendationMessage> buildRecommendationMessageMap() {
+    Map<String, RecommendationMessage> result = new HashMap<>();
+    if (account == null || account.getUsername() == null) {
+      return result;
+    }
+    if (!catalogService.hasCompletedSurvey(account)) {
+      return result;
+    }
+
+    Map<String, RecommendationMessage> cachedMessages = recommendationMessageService
+        .getRecommendationMessageMap(account.getUsername());
+    for (Item item : recommendedItems) {
+      if (item == null || item.getProduct() == null) {
+        continue;
+      }
+      String productId = item.getProduct().getProductId();
+      if (productId == null || result.containsKey(productId)) {
+        continue;
+      }
+
+      RecommendationMessage message = cachedMessages.get(productId);
+      if (message == null) {
+        message = recommendationMessageService.getRecommendationMessage(account.getUsername(), productId);
+      }
+      if (message != null) {
+        result.put(productId, message);
+      }
+    }
+    return result;
   }
 }

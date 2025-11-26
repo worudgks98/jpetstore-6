@@ -70,7 +70,47 @@
                         <%-- 이미지 팝업 --%>
                         <div class="image-popup">
                             <img src="/jpetstore/images/placeholder.gif" alt="Item Image" />
-                            <div class="recommend-text"></div>
+                            <div class="recommend-text">
+                                <%-- 각 아이템의 productId별로 추천 메시지 가져오기 --%>
+                                <c:set var="currentProductId" value="${item.product.productId}" />
+                                <c:choose>
+                                    <%-- ALL 카테고리가 아니고 productId가 있으면 actionBean의 메시지 사용 --%>
+                                    <c:when test="${actionBean.product.categoryId != 'ALL' && not empty actionBean.productRecommendationMessage}">
+                                        <div class="ai-copy ${actionBean.productRecommendationMessage.recommended ? 'RECOMMEND' : 'NOT_RECOMMEND'}">
+                                            <div class="ai-copy-body">
+                                                <c:out value="${actionBean.productRecommendationMessage.message}" escapeXml="false" />
+                                            </div>
+                                        </div>
+                                    </c:when>
+                                    <%-- ALL 카테고리: itemRecommendationMessageMap에서 각 아이템의 productId로 메시지 가져오기 --%>
+                                    <c:when test="${actionBean.product.categoryId == 'ALL' && not empty actionBean.itemRecommendationMessageMap}">
+                                        <c:set var="itemRecommendation" value="${actionBean.itemRecommendationMessageMap[currentProductId]}" />
+                                        <c:choose>
+                                            <c:when test="${not empty itemRecommendation}">
+                                                <div class="ai-copy ${itemRecommendation.recommended ? 'RECOMMEND' : 'NOT_RECOMMEND'}">
+                                                    <div class="ai-copy-body">
+                                                        <c:out value="${itemRecommendation.message}" escapeXml="false" />
+                                                    </div>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:if test="${sessionScope.accountBean.authenticated}">
+                                                    <div class="ai-copy neutral">
+                                                        설문 답변을 반영한 추천 문구를 준비하는 중입니다.
+                                                    </div>
+                                                </c:if>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:if test="${sessionScope.accountBean.authenticated}">
+                                            <div class="ai-copy neutral">
+                                                설문 답변을 반영한 추천 문구를 준비하는 중입니다.
+                                            </div>
+                                        </c:if>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                         </div>
 
                         <%-- 데이터 숨김 (이미지 경로용) --%>
@@ -101,71 +141,191 @@
     // 이미지 경로 추출 함수
     function extractImagePath(desc) {
         if (!desc) return '/jpetstore/images/placeholder.gif';
-        const match = desc.match(/<img src="([^"]+)">/);
+
+        // <image src="..."> 또는 <img src="..."> 형식 모두 처리
+        let match = desc.match(/<(?:image|img)[^>]+src\s*=\s*["']([^"']+)["']/i);
         if (match && match[1]) {
-            return match[1].replace('../', '/jpetstore/');
+            let imgPath = match[1];
+            // 상대 경로를 절대 경로로 변환
+            if (imgPath.startsWith('../')) {
+                imgPath = imgPath.replace('../', '/jpetstore/');
+            } else if (!imgPath.startsWith('/')) {
+                imgPath = '/jpetstore/' + imgPath;
+            }
+            return imgPath;
         }
         return '/jpetstore/images/placeholder.gif';
+    }
+
+    // 팝업 위치를 화면 경계에 맞게 조정하는 함수
+    function adjustPopupPosition(link, popup) {
+        // 링크의 화면상 위치 정보 가져오기 (getBoundingClientRect는 viewport 기준)
+        const linkRect = link.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // 팝업이 표시된 후 실제 크기 측정
+        const popupRect = popup.getBoundingClientRect();
+        const popupWidth = popupRect.width || 250;
+        const popupHeight = popupRect.height || 300;
+
+        // 화면 경계까지의 거리 계산
+        const spaceOnLeft = linkRect.left;
+        const spaceOnRight = viewportWidth - linkRect.right;
+        const spaceOnTop = linkRect.top;
+        const spaceOnBottom = viewportHeight - linkRect.bottom;
+
+        // 기본 위치: 링크 왼쪽, 상단 정렬
+        let popupLeft = linkRect.left - popupWidth - 10;
+        let popupTop = linkRect.top;
+
+        // 왼쪽/오른쪽 위치 결정
+        if (spaceOnLeft >= popupWidth + 10) {
+            // 왼쪽에 공간이 충분하면 왼쪽에 표시
+            popupLeft = linkRect.left - popupWidth - 10;
+        } else if (spaceOnRight >= popupWidth + 10) {
+            // 오른쪽에 공간이 충분하면 오른쪽에 표시
+            popupLeft = linkRect.right + 10;
+        } else {
+            // 양쪽 모두 공간이 부족하면 오른쪽에 표시하고 화면 경계에 맞춤
+            popupLeft = linkRect.right + 10;
+            // 화면 오른쪽 경계를 넘지 않도록 조정
+            if (popupLeft + popupWidth > viewportWidth) {
+                popupLeft = viewportWidth - popupWidth - 10;
+            }
+            // 화면 왼쪽 경계를 넘지 않도록 조정
+            if (popupLeft < 10) {
+                popupLeft = 10;
+            }
+        }
+
+        // 위/아래 위치 결정
+        if (spaceOnBottom >= popupHeight) {
+            // 아래에 공간이 충분하면 상단 정렬
+            popupTop = linkRect.top;
+        } else if (spaceOnTop >= popupHeight) {
+            // 위에 공간이 충분하면 하단 정렬
+            popupTop = linkRect.bottom - popupHeight;
+        } else {
+            // 위아래 모두 공간이 부족하면 화면 중앙에 맞춤
+            if (spaceOnBottom < spaceOnTop) {
+                // 화면 하단에 가까우면 위로 표시
+                popupTop = linkRect.bottom - popupHeight;
+                // 화면 상단을 넘지 않도록 조정
+                if (popupTop < 10) {
+                    popupTop = 10;
+                }
+            } else {
+                // 화면 상단에 가까우면 아래로 표시
+                popupTop = linkRect.top;
+                // 화면 하단을 넘지 않도록 조정
+                if (popupTop + popupHeight > viewportHeight - 10) {
+                    popupTop = viewportHeight - popupHeight - 10;
+                }
+            }
+        }
+
+        // position: fixed는 viewport 기준이므로 스크롤 위치를 더할 필요 없음
+        popup.style.left = popupLeft + 'px';
+        popup.style.top = popupTop + 'px';
+        popup.style.right = 'auto';
+        popup.style.bottom = 'auto';
+        popup.style.transform = '';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         const links = document.querySelectorAll('.item-link');
 
-        // ★★★ 4. [안전장치] 데이터가 없어도 스크립트가 죽지 않도록 수정 ★★★
-        // 세션 데이터가 있으면 쓰고, 없으면 빈 배열 [] 사용
-        let recommendedIds = [];
-        try {
-            // JSP EL이 빈 문자열을 출력할 경우를 대비해 따옴표로 감싸고 파싱 시도
-            const jsonStr = '${sessionScope.recommendationJson}';
-            if (jsonStr && jsonStr.trim() !== '') {
-                recommendedIds = JSON.parse(jsonStr);
-            }
-        } catch (e) {
-            console.log('No recommendation data or parse error:', e);
-        }
-
-        // JSON이 객체 배열([{"productId":"..."}]) 형태일 경우 ID만 추출하는 로직 추가
-        if (recommendedIds.length > 0 && typeof recommendedIds[0] === 'object') {
-            recommendedIds = recommendedIds.map(item => item.productId);
-        }
-
         links.forEach(link => {
             const popup = link.querySelector('.image-popup');
             const dataSpan = link.querySelector('.popup-data');
-            const imgTag = popup.querySelector('img');
-            const recommendDiv = popup.querySelector('.recommend-text');
+            const imgTag = popup ? popup.querySelector('img') : null;
 
             if (popup && dataSpan && imgTag) {
-                // 이미지 설정
-                const description = dataSpan.innerHTML;
-                imgTag.src = extractImagePath(description);
-
-                // 추천 배지 설정
-                const currentItemId = dataSpan.getAttribute('data-id');
-
-                // 안전하게 문자열 포함 여부 확인
-                let isRecommended = false;
-                if (Array.isArray(recommendedIds)) {
-                    // ID가 포함되어 있는지 확인
-                    isRecommended = recommendedIds.includes(currentItemId);
+                // 이미지 설정 - 데이터가 준비될 때까지 대기
+                function setImage() {
+                    const description = dataSpan.innerHTML || '';
+                    if (description && description.trim() !== '') {
+                        imgTag.src = extractImagePath(description);
+                    } else {
+                        // 데이터가 아직 준비되지 않은 경우 재시도
+                        setTimeout(setImage, 100);
+                    }
                 }
-
-                if (isRecommended) {
-                    recommendDiv.innerHTML = '<div class="recommend-badge" style="background:#dff0d8; color:#3c763d; padding:5px; margin-top:5px; border-radius:4px; font-weight:bold;">👍 AI 추천 상품</div>';
-                } else {
-                    // 추천 아님 (비워두기)
-                    recommendDiv.innerHTML = '';
-                }
+                setImage();
             }
 
             // 마우스 오버 이벤트
-            link.addEventListener('mouseenter', function() {
-                popup.style.display = 'block';
-            });
-            link.addEventListener('mouseleave', function() {
-                popup.style.display = 'none';
-            });
+            if (link && popup) {
+                link.addEventListener('mouseenter', function() {
+                    // 이미지 경로 추출 및 업데이트
+                    if (dataSpan && imgTag) {
+                        const description = dataSpan.innerHTML || '';
+                        if (description) {
+                            imgTag.src = extractImagePath(description);
+                        }
+                    }
+
+                    popup.style.display = 'block';
+                    // 팝업이 표시된 후 위치 조정
+                    requestAnimationFrame(function() {
+                        adjustPopupPosition(link, popup);
+                        // 이미지 로드 후에도 위치 재조정
+                        const img = popup.querySelector('img');
+                        if (img && !img.complete) {
+                            img.addEventListener('load', function() {
+                                adjustPopupPosition(link, popup);
+                            }, { once: true });
+                        }
+                    });
+                });
+
+                link.addEventListener('mouseleave', function() {
+                    popup.style.display = 'none';
+                });
+            }
         });
+
+        // 창 크기 변경 및 스크롤 시에도 위치 재조정
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                links.forEach(link => {
+                    const popup = link.querySelector('.image-popup');
+                    if (popup && popup.style.display === 'block') {
+                        adjustPopupPosition(link, popup);
+                    }
+                });
+            }, 100);
+        });
+
+        window.addEventListener('scroll', function() {
+            links.forEach(link => {
+                const popup = link.querySelector('.image-popup');
+                if (popup && popup.style.display === 'block') {
+                    adjustPopupPosition(link, popup);
+                }
+            });
+        }, true);
+    });
+
+    // 추가 보험: window.load 후에도 실행 (ALL 카테고리 초기 로드 보장)
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            const links = document.querySelectorAll('.item-link');
+            links.forEach(link => {
+                const popup = link.querySelector('.image-popup');
+                const dataSpan = link.querySelector('.popup-data');
+                const imgTag = popup ? popup.querySelector('img') : null;
+                if (popup && dataSpan && imgTag) {
+                    const description = dataSpan.innerHTML || '';
+                    if (description && description.trim() !== '') {
+                        imgTag.src = extractImagePath(description);
+                    }
+                }
+            });
+        }, 100);
     });
 </script>
 

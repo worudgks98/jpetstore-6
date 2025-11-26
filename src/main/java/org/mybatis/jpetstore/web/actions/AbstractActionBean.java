@@ -1,5 +1,5 @@
 /*
- *    Copyright 2010-2022 the original author or authors.
+ *    Copyright 2010-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -46,6 +46,13 @@ public abstract class AbstractActionBean implements ActionBean, Serializable {
   @Override
   public void setContext(ActionBeanContext context) {
     this.context = context;
+    // Debug: Log when context is set (this happens for every request)
+    if (context != null && context.getRequest() != null) {
+      String requestURI = context.getRequest().getRequestURI();
+      String method = context.getRequest().getMethod();
+      System.out
+          .println("=== AbstractActionBean.setContext() called - URI: " + requestURI + ", Method: " + method + " ===");
+    }
   }
 
 }

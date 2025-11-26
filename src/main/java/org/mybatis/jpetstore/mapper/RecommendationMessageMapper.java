@@ -17,21 +17,15 @@ package org.mybatis.jpetstore.mapper;
 
 import java.util.List;
 
-import org.mybatis.jpetstore.domain.Product;
+import org.mybatis.jpetstore.domain.RecommendationMessage;
 
-/**
- * The Interface ProductMapper.
- *
- * @author Eduardo Macarron
- */
-public interface ProductMapper {
+public interface RecommendationMessageMapper {
 
-  List<Product> getProductListByCategory(String categoryId);
+  List<RecommendationMessage> getMessagesForUser(String username);
 
-  Product getProduct(String productId);
+  RecommendationMessage getMessage(String username, String productId);
 
-  List<Product> searchProductList(String keywords);
+  void deleteMessagesForUser(String username);
 
-  List<Product> getAllProducts();
-
+  void insertRecommendationMessage(RecommendationMessage message);
 }

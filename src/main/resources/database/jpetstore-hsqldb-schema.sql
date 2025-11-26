@@ -147,6 +147,17 @@ create table product (
 create index productCat on product (category);
 create index productName on product (name);
 
+create table recommendation_messages (
+    username varchar(80) not null,
+    productid varchar(10) not null,
+    is_recommended boolean not null,
+    message varchar(1024) not null,
+    last_updated timestamp default current_timestamp,
+    constraint pk_recommendation_messages primary key (username, productid),
+    constraint fk_recommendation_messages_account foreign key (username) references account (userid),
+    constraint fk_recommendation_messages_product foreign key (productid) references product (productid)
+);
+
 create table item (
     itemid varchar(10) not null,
     productid varchar(10) not null,

@@ -35,6 +35,7 @@
         <jdbc:script location="classpath:database/jpetstore-hsqldb-schema.sql"/>
         <jdbc:script location="classpath:database/jpetstore-hsqldb-dataload.sql"/>
         <jdbc:script location="classpath:database/jpetstore-hsqldb-recommendations.sql"/>
+        <jdbc:script location="classpath:database/jpetstore-hsqldb-update-dog-images.sql"/>
     </jdbc:embedded-database>
 
     <!-- transaction manager, use DataSourceTransactionManager" for JDBC local tx -->

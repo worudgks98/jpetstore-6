@@ -1,5 +1,5 @@
 /*
- *    Copyright 2010-2022 the original author or authors.
+ *    Copyright 2010-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import org.mybatis.jpetstore.domain.Account;
 import org.mybatis.jpetstore.mapper.AccountMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * The Class AccountService.
@@ -31,9 +33,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountService {
 
   private final AccountMapper accountMapper;
+  private final RecommendationMessageService recommendationMessageService;
 
-  public AccountService(AccountMapper accountMapper) {
+  public AccountService(AccountMapper accountMapper, RecommendationMessageService recommendationMessageService) {
     this.accountMapper = accountMapper;
+    this.recommendationMessageService = recommendationMessageService;
   }
 
   public Account getAccount(String username) {
@@ -55,6 +59,7 @@ public class AccountService {
     accountMapper.insertAccount(account);
     accountMapper.insertProfile(account);
     accountMapper.insertSignon(account);
+    triggerRecommendationRefresh(account);
   }
 
   /**
@@ -70,6 +75,63 @@ public class AccountService {
 
     Optional.ofNullable(account.getPassword()).filter(password -> password.length() > 0)
         .ifPresent(password -> accountMapper.updateSignon(account));
+
+    // Note: Recommendation refresh is handled in AccountActionBean.editAccount()
+    // after the transaction commits to ensure we have the latest data
+  }
+
+  /**
+   * Refresh recommendation messages for an account. This should be called after updateAccount() to ensure
+   * recommendations are regenerated.
+   *
+   * @param username
+   *          the username to refresh recommendations for
+   */
+  public void refreshRecommendationsForUser(String username) {
+    if (username == null) {
+      return;
+    }
+
+    // Fetch the latest account data from DB
+    Account latestAccount = accountMapper.getAccountByUsername(username);
+    if (latestAccount != null) {
+      recommendationMessageService.refreshRecommendations(latestAccount);
+    }
+  }
+
+  private void triggerRecommendationRefresh(Account account) {
+    if (account == null || account.getUsername() == null) {
+      return;
+    }
+
+    // Create a copy of the account to avoid issues with transaction state
+    Account accountSnapshot = new Account();
+    accountSnapshot.setUsername(account.getUsername());
+    accountSnapshot.setResidenceEnv(account.getResidenceEnv());
+    accountSnapshot.setCarePeriod(account.getCarePeriod());
+    accountSnapshot.setPetColorPref(account.getPetColorPref());
+    accountSnapshot.setPetSizePref(account.getPetSizePref());
+    accountSnapshot.setActivityTime(account.getActivityTime());
+    accountSnapshot.setDietManagement(account.getDietManagement());
+
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+        @Override
+        public void afterCommit() {
+          // After commit, fetch the latest account data from DB to ensure we have the most up-to-date information
+          Account latestAccount = accountMapper.getAccountByUsername(accountSnapshot.getUsername());
+          if (latestAccount != null) {
+            recommendationMessageService.refreshRecommendations(latestAccount);
+          } else {
+            // Fallback to snapshot if DB fetch fails
+            recommendationMessageService.refreshRecommendations(accountSnapshot);
+          }
+        }
+      });
+    } else {
+      // If no transaction, use the account directly
+      recommendationMessageService.refreshRecommendations(accountSnapshot);
+    }
   }
 
 }
