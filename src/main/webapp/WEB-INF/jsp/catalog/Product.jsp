@@ -20,9 +20,6 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!-- ★★★ 1. 비교하기 버튼 (우측 상단 고정) ★★★ -->
-<button class="compare-btn-fixed" id="compareBtn" onclick="openComparisonPopup()" disabled>
-    Compare
-</button>
 
 <jsp:useBean id="catalog"
              class="org.mybatis.jpetstore.web.actions.CatalogActionBean" />
@@ -47,6 +44,29 @@
 <div id="Catalog">
 
     <h2>${actionBean.product.name}</h2>
+
+<div class="table-container"
+     style="
+         position: relative;
+         width: max-content;
+         margin: 0 auto;
+     ">
+
+    <!-- ★ Compare 버튼: 표 오른쪽 끝에 정확히 붙음 ★ -->
+    <button id="compareBtn"
+            class="compare-btn-fixed"
+            disabled
+            onclick="openComparisonPopup()"
+            style="
+                position:absolute;
+                top:-35px;
+                right:0;
+            ">
+        Compare
+    </button>
+
+
+
 
     <table class="itemList">
         <tr>
@@ -121,7 +141,7 @@
                 </td>
                 <td>${item.product.productId}</td>
                 <td>${item.attribute1} ${item.attribute2} ${item.attribute3}
-                        ${item.attribute4} ${item.attribute5} ${actionBean.product.name}</td>
+                        ${item.attribute4} ${item.attribute5} ${item.product.name}</td>
                 <td><fmt:formatNumber value="${item.listPrice}"
                                       pattern="$#,##0.00" /></td>
                 <td><stripes:link class="Button"

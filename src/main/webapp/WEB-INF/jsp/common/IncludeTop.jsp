@@ -125,36 +125,35 @@
  <!-- ★★★ 추가됨 END: 비교 팝업 HTML (CSS) ★★★ -->
 
 <style>
-  /* 비교하기 버튼 - 우측 상단에 고정 */
-  .compare-btn-fixed {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 24px;
-    background-color: #008CBA;
+.compare-btn-fixed {
+    padding: 8px 20px;
+    font-size: 14px;
+    height: 34px;
+
+    background-color: #215E21;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
     font-weight: bold;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  }
 
-  .compare-btn-fixed:hover {
-    background-color: #007399;
-  }
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
 
-  .compare-btn-fixed:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
 
-  .checkbox-cell {
-    text-align: center;
-    width: 50px;
-  }
+ .compare-btn-fixed:hover {
+     background-color: #007399;
+ }
+
+ .compare-btn-fixed:disabled {
+     background-color: #ccc;
+     cursor: not-allowed;
+ }
+
+ .checkbox-cell {
+     width: 50px;
+     text-align: center;
+ }
 </style>
 
 <!-- ★★★ 추가됨 START: 비교 기능 JavaScript ★★★ -->

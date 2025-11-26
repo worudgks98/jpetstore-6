@@ -195,7 +195,6 @@ public class CatalogActionBean extends AbstractActionBean {
     if ("ALL".equals(categoryId)) {
       itemList = catalogService.getAllItemList();
       product = new Product();
-      product.setName("ALL Products");
       product.setCategoryId("ALL");
 
       // ALL 카테고리: 각 아이템의 productId별 추천 메시지 미리 로드
