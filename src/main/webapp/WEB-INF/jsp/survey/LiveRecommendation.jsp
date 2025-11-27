@@ -1,21 +1,22 @@
 <%--
+
        Copyright 2010-2025 the original author or authors.
+
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
+
           https://www.apache.org/licenses/LICENSE-2.0
+
        Unless required by applicable law or agreed to in writing, software
        distributed under the License is distributed on an "AS IS" BASIS,
        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
        See the License for the specific language governing permissions and
        limitations under the License.
+
 --%>
 <%@ include file="../common/IncludeTop.jsp"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
-
-<button class="compare-btn-fixed" id="compareBtn" onclick="openComparisonPopup()" disabled>
-    Compare
-</button>
 
 <div id="Catalog">
 
@@ -30,9 +31,21 @@
       <div class="Message">No recommendations available.</div>
     </c:if>
     <c:if test="${not empty actionBean.recommendedItems}">
-      
+
       <div class="table-container" style="position: relative; width: max-content; margin: 0 auto;">
-        
+
+        <button id="compareBtn"
+                    class="compare-btn-fixed"
+                    disabled
+                    onclick="openComparisonPopup()"
+                    style="
+                        position:absolute;
+                        top:-35px;
+                        right:0;
+                    ">
+                Compare
+            </button>
+
         <table class="itemList"> <tr>
             <th>Item ID</th>
             <th>Product ID</th>
@@ -49,10 +62,10 @@
                   event="viewItem"
                   class="item-link"> <stripes:param name="itemId" value="${item.itemId}" />
                   ${item.itemId}
-                  
+
                   <div class="image-popup">
                       <img src="/jpetstore/images/placeholder.gif" alt="Item Image" />
-                      
+
                       <div class="recommend-text">
                           <c:set var="recommendation" value="${actionBean.recommendationMessageMap[item.product.productId]}" />
                           <c:choose>
@@ -73,11 +86,11 @@
                           </c:choose>
                       </div>
                   </div>
-  
+
                   <span class="popup-data" style="display: none;">
                       <c:out value="${item.product.description}" escapeXml="false" />
                   </span>
-  
+
                 </stripes:link>
                 <%-- ★★★ 팝업을 위한 구조 변경 끝 ★★★ --%>
               </td>
@@ -200,7 +213,7 @@
                         if (description) imgTag.src = extractImagePath(description);
                     }
                     popup.style.display = 'block';
-                    
+
                     // 위치 조정
                     requestAnimationFrame(function() {
                         adjustPopupPosition(link, popup);
